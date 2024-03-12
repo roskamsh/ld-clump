@@ -3,3 +3,6 @@ input/*
 output/*
 logs/*
 plink.log
+.nextflow*
+work/*
+trace*
