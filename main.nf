@@ -149,18 +149,18 @@ process create_assoc_file {
 }
 
 process ld_clump {
-    container 'biocontainers/plink1.9:v1.90b6.6-181012-1-deb_cv1'
+    container 'roskamsh/plink1.9:0.1.1'
     publishDir "${launchDir}/output/clumps"
 
     input:
         tuple val(chr), val(tf), val(prefix), path(bed_files), path(assoc)
 
     output:
-        path "${tf}_clumped_r0.2*"
+        path "${tf}_clumped_r0.5*"
 
     script:
         """
-        plink --bfile ${prefix}_info_score_0.6_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 0.2 --out ${tf}_clumped_r0.2
+        plink --bfile ${prefix}_info_score_0.6_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 0.5 --out ${tf}_clumped_r0.5
         """
 }
 
