@@ -21,7 +21,9 @@ The configuration for a given run is specified in a run-specific config file, wh
 
 * TFs : a CSV file which contains two columns, the first being `TF`, which contains the GeneSymbol for a given transcription factor of interest. The second column is `CHR` and contains the chromosome number where that gene is positioned on the genome.
 * SNPs : a CSV file which contains all SNPs you would like to run LD clumping on, which are associated with a given transcription factor. This should be formatted the same as the output from eQTLGen (See: https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz). This can be a "master list" and doesn't necessarily need to be filtered for only the genes you are interested in.
-* BGEN_FILES : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample). 
+* BGEN_FILES : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
+* ASSEMBLY : either grch37 or grch38 (also will accept hg19 or hg38), which is used to define problem areas of the genome to exclude (See: https://github.com/gabraham/flashpca/blob/master/exclusion_regions_hg19.txt)
+* R2_THRESHOLD : R-squared threshold to use for idenftifying which SNPs are in LD with one another. Default is 0.8. 
 
 ## Run
 
