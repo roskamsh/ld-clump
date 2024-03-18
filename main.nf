@@ -125,9 +125,19 @@ process bgen_to_bed {
 
     script:
         """
+        if [[ "${params.ASSEMBLY}" = "grch37" || "${params.ASSEMBLY}" = "hg19" ]]; then
+            ranges="5:44000000-51500000 6:25000000-33500000 8:8000000-12000000 11:45000000-57000000"
+        elif [[ "${params.ASSEMBLY}" = "grch38" || "${params.ASSEMBLY}" = "hg38" ]]; then
+            ranges="5:43999898-52204166 6:24999772-33532223 8:8142478-12142491 11:44978449-57232526"
+        else
+            echo "Assembly provided does not match grch37/hg19 or grch38/hg38"
+            exit 1
+        fi
+
         qctool -g ${prefix}${chr}.bgen \
                -s ${prefix}${chr}.sample \
                -excl-rsids ${exclusion_snps} \
+               -excl-range \$ranges \
                -og "${prefix}_info_score_0.6_chr${chr}.bed"
         """
 }
@@ -156,11 +166,11 @@ process ld_clump {
         tuple val(chr), val(tf), val(prefix), path(bed_files), path(assoc)
 
     output:
-        path "${tf}_clumped_r0.5*"
+        path "${tf}_clumped_r${params.R2_THRESHOLD}*"
 
     script:
         """
-        plink --bfile ${prefix}_info_score_0.6_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 0.5 --out ${tf}_clumped_r0.5
+        plink --bfile ${prefix}_info_score_0.6_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 ${params.R2_THRESHOLD} --out ${tf}_clumped_r${params.R2_THRESHOLD}
         """
 }
 
