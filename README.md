@@ -7,7 +7,7 @@ This is a nextflow pipeline which takes as input data from eQTLGen, BGEN files f
 ### Software requirements
 To run this pipeline, you must have nextflow installed. Please see build instructions here: https://www.nextflow.io/docs/latest/getstarted.html#installation
 
-Additionally, you must have singularity installed or loaded as a module, as this pipeline uses singularity to pull Docker images for the software required at each step in the pipeline. On Eddie, this can be done with the following:
+Additionally, you must have singularity installed or loaded as a module, as this pipeline uses singularity to pull from DockerHub for the software required at each step in the pipeline. On Eddie, this can be done with the following:
 
 ```
 module load roslin/singularity/3.10.1
@@ -17,7 +17,7 @@ Otherwise, please see: https://docs.sylabs.io/guides/3.0/user-guide/installation
 
 ### Configuration
 
-The configuration for a given run is specified in a run-specific config file, which you create and is dataset-specific. An example is shown in `genomicc.config`. The followin parameters are required:
+The configuration for a given run is specified in a run-specific config file, which you create and is dataset-specific. An example is shown in `genomicc.config`. The following parameters are required:
 
 * TFs : a CSV file which contains two columns, the first being `TF`, which contains the GeneSymbol for a given transcription factor of interest. The second column is `CHR` and contains the chromosome number where that gene is positioned on the genome.
 * SNPs : a CSV file which contains all SNPs you would like to run LD clumping on, which are associated with a given transcription factor. This should be formatted the same as the output from eQTLGen (See: https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz). This can be a "master list" and doesn't necessarily need to be filtered for only the genes you are interested in.
