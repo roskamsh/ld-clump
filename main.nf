@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+params.R2_THRESHOLD = 0.8
+params.INFO_THRESHOLD = 0.9
+
 workflow create_input_channels {
     main:
     Channel
@@ -74,6 +77,7 @@ workflow reconfigure_channels {
 process generate_info_score {
     label 'moremem'
     container 'roskamsh/qctools:0.1.1'
+    publishDir("${launchDir}/output/info_scores", pattern: "*.snpstats") 
 
     input:
         tuple val(chr), val(prefix), path(files)
@@ -89,6 +93,7 @@ process generate_info_score {
 
 process find_exclusion_snps {
     container 'roskamsh/bgen_env:0.2.0'
+
     input:
         tuple val(chr), val(prefix), path(files), path(snpstats)
 
@@ -100,8 +105,9 @@ process find_exclusion_snps {
         #!/usr/bin/env python
         import pandas as pd
 
+        info_score_threshold = int("${params.INFO_THRESHOLD}")
         df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
-        df = df[df["info"] < 0.6]
+        df = df[df["info"] < info_score_threshold]
 
         snps = df[["alternate_ids","rsid","chromosome","position","alleleA","alleleB"]]
         snps.columns = ["SNPID","rsid","chromosome","position","alleleA","alleleB"] 
@@ -144,6 +150,7 @@ process bgen_to_bed {
 
 process create_assoc_file {
     container 'roskamsh/bgen_env:0.2.0'
+    publishDir("${launchDir}/output/assoc_files", pattern: "*.assoc")
 
     input:
         tuple val(chr), val(tf), path(snps), val(prefix), path(bed_files)

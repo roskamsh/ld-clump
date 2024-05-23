@@ -46,15 +46,15 @@ for i, snp in enumerate(eqtls.SNP.values):
             alt_alleles[i] = alt_allele
 
 # Add to eqtls
-eqtls['SNP'] = new_ids
+eqtls['BGEN_ID'] = new_ids
 eqtls['A1'] = ref_allele
 eqtls['A2'] = alt_allele
 
 # Remove missing values
-eqtls = eqtls.dropna(subset = ["SNP"])
+eqtls = eqtls.dropna(subset = ["BGEN_ID"])
 
 # Reformat to match what is expected in PLINK for LD-clumping
-eqtls = eqtls[["SNP","SNPChr","SNPPos","A1","A2","Pvalue"]]
-eqtls.columns = ["SNP","CHR","BP","A1","A2","P"]
+eqtls = eqtls[["BGEN_ID","SNP","SNPChr","SNPPos","A1","A2","Pvalue"]]
+eqtls.columns = ["SNP","RSID","CHR","BP","A1","A2","P"]
 
 eqtls.to_csv(f"input/{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")

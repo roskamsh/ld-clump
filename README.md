@@ -24,6 +24,7 @@ The configuration for a given run is specified in a run-specific config file, wh
 * BGEN_FILES : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
 * ASSEMBLY : either grch37 or grch38 (also will accept hg19 or hg38), which is used to define problem areas of the genome to exclude (See: https://github.com/gabraham/flashpca/blob/master/exclusion_regions_hg19.txt)
 * R2_THRESHOLD : R-squared threshold to use for idenftifying which SNPs are in LD with one another. Default is 0.8. 
+* INFO_THRESHOLD : Info score threshold set on imputation quality. Anything below this value will not be considered for hard-calling genotypes from the BGEN files. The default is 0.9.
 
 ## Run
 
