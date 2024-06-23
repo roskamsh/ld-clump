@@ -36,6 +36,5 @@ nextflow run main.nf -profile eddie -c path/to/custom.config
 
 ## Docker containers
 
-Docker containers for this workflow can be found at https://github.com/TARGENE/ld-block-removal/containers
+Docker containers for this workflow can be found either in the `containers` directory in this repository, or at https://github.com/TARGENE/ld-block-removal/containers
 
-**This includes containers for the python environment bgen_env, as well as QCtoolv2.**
