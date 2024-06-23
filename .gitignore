@@ -6,3 +6,4 @@ plink.log
 .nextflow*
 work/*
 trace*
+dag*
