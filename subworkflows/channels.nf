@@ -18,17 +18,8 @@ workflow create_input_channels {
             files: [files]
         }
         .set { bgen_files_ch }
-
-    Channel
-        .fromPath(params.SNPs, checkIfExists: true)
-        .set { snps_ch }
-
-    // Join SNPs file with each TF/CHR
-    tfs_ch.chr_tf_ch
-        .combine(snps_ch)
-        .set { tfs_snps_ch }
     
-    // Collapse on duplicate chromosomes and join with BGEN files
+    // Collapse on duplicate chromosomes and combine with BGEN files
     tfs_ch.chr_ch
         .unique()
         .combine(bgen_files_ch.prefix)
@@ -36,9 +27,8 @@ workflow create_input_channels {
         .set { chr_bgen_ch }
 
     emit:
-        tfs_bgen = tfs_snps_ch
+        tfs = tfs_ch.chr_tf_ch
         chr_bgen = chr_bgen_ch
-    
 }
 
 workflow create_tf_bed_channel {
