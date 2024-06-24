@@ -29,7 +29,7 @@ process find_exclusion_snps {
         #!/usr/bin/env python
         import pandas as pd
 
-        info_score_threshold = int("${params.INFO_THRESHOLD}")
+        info_score_threshold = float("${params.INFO_THRESHOLD}")
         df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
         df = df[df["info"] < info_score_threshold]
 
