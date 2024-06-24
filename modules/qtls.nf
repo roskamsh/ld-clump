@@ -33,13 +33,8 @@ process read_and_filter_bQTLs {
     tf = "${TF}"
     concordant_value = bool("${params.Concordant}")
 
-    file_list = os.listdir(dir)
-    # Find the filename in the cwd that contains our TF of interest
-    tf_filename = next(
-        (f for f in file_list if os.path.isfile(os.path.join(dir, f)) and tf in f),
-        None
-    )
-
+    # Define filename in the cwd that contains our TF of interest
+    tf_filename = f"{tf}.withPeaks.withMotifs.csv"
     results = pd.read_csv(os.path.join(dir, tf_filename))
 
     # Filter by Concordant value if nextflow parameter is not empty
