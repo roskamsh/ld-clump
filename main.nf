@@ -3,6 +3,7 @@ nextflow.enable.dsl = 2
 
 params.R2_THRESHOLD = 0.8
 params.INFO_THRESHOLD = 0.9
+params.ASSEMBLY = "hg19"
 params.eQTLGEN_DATA = ""
 params.Concordant = "True"
 
