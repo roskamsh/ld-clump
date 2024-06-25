@@ -1,4 +1,4 @@
-include { create_assoc_file; ld_clump } from '../modules/clump.nf'
+include { create_assoc_file; ld_clump; create_eqtl_list } from '../modules/clump.nf'
 
 workflow generate_independent_snps {
     take:
@@ -8,4 +8,6 @@ workflow generate_independent_snps {
         create_assoc_file(tf_bed_ch, file("${projectDir}/py/create_assoc_file.py"))
 
         ld_clump(create_assoc_file.out)
+
+        create_eqtl_list(ld_clump.out)
 }
