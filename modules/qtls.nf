@@ -21,7 +21,7 @@ process read_and_filter_bQTLs {
     tuple val(CHR), val(TF), path(DIR)
 
     output:
-    path "${TF}.filtered.csv"
+    tuple val(CHR), val(TF), path("${TF}.filtered.csv")
 
     script:
     """
