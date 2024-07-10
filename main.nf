@@ -6,20 +6,22 @@ params.INFO_THRESHOLD = 0.9
 params.ASSEMBLY = "hg19"
 params.eQTLGEN_DATA = ""
 params.Concordant = "True"
+params.OUTDIR = "${launchDir}/output"
 
-include { create_input_channels; create_tf_bed_channel } from './subworkflows/channels.nf' 
+include { create_tf_bed_channel } from './subworkflows/channels.nf' 
 include { preprocess_qtl_data } from './subworkflows/qtls.nf'
 include { preprocess_genetic_data } from './subworkflows/bgen.nf'
 include { generate_independent_snps } from './subworkflows/clump.nf'
+include { check_interactions } from './subworkflows/interactions.nf'
 
 workflow {
-    create_input_channels()
+    preprocess_qtl_data()
 
-    preprocess_qtl_data(create_input_channels.out.tfs)
+    preprocess_genetic_data(preprocess_qtl_data.out.chrs)
 
-    preprocess_genetic_data(create_input_channels.out.chr_bgen)
+    create_tf_bed_channel(preprocess_genetic_data.out,  preprocess_qtl_data.out.tf_chr_eqtls)
 
-    create_tf_bed_channel(preprocess_genetic_data.out,  preprocess_qtl_data.out.tfs_eqtls, create_input_channels.out.chr_bgen)
+    generate_independent_snps(create_tf_bed_channel.out.tf_bed)
 
-    generate_independent_snps(create_tf_bed_channel.out)
+    check_interactions(create_tf_bed_channel.out.bed_files)
 }
