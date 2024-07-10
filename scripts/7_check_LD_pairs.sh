@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-module load igmm/apps/plink/2.00 
+conda activate plink2
 
 # Test code for checking LD between two SNPs (bQTL first, eQTL second)
 var1="chr6:89985527:A:G"
