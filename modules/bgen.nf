@@ -1,7 +1,7 @@
 process generate_info_score {
     label 'moremem'
     container 'roskamsh/qctools:0.1.1'
-    publishDir("${launchDir}/output/info_scores", pattern: "*.snpstats") 
+    publishDir("$params.OUTDIR/info_scores", pattern: "*.snpstats") 
 
     input:
         tuple val(chr), val(prefix), path(files)
@@ -51,7 +51,7 @@ process bgen_to_bed {
         tuple val(chr), val(prefix), path(files), path(exclusion_snps)
 
     output:
-        tuple val(chr), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bed"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bim"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.fam")
+        tuple val(chr), val(prefix), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bed"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bim"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.fam")
 
     script:
         """
