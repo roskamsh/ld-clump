@@ -1,13 +1,13 @@
 process create_assoc_file {
     container 'roskamsh/bgen_env:0.2.0'
-    publishDir("${launchDir}/output/assoc_files", pattern: "*.assoc")
+    publishDir("$params.OUTDIR/assoc_files", pattern: "*.assoc")
 
     input:
-        tuple val(chr), val(tf), path(snps), val(prefix), path(bed_files)
+        tuple val(tf), val(chr), path(snps), val(prefix), path(bed_files)
         path script
 
     output:
-        tuple val(chr), val(tf), val(prefix), path(bed_files), path("${tf}_ciseQTLs_hg38.assoc")
+        tuple val(tf), val(chr), val(prefix), path(bed_files), path("${tf}_ciseQTLs_hg38.assoc")
 
     script:
         """
@@ -17,13 +17,13 @@ process create_assoc_file {
 
 process ld_clump {
     container 'roskamsh/plink1.9:0.1.1'
-    publishDir "${launchDir}/output/clumps"
+    publishDir "$params.OUTDIR/clumps"
 
     input:
-        tuple val(chr), val(tf), val(prefix), path(bed_files), path(assoc)
+        tuple val(tf), val(chr), val(prefix), path(bed_files), path(assoc)
 
     output:
-        tuple val(chr), val(tf), val(prefix), path(bed_files), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
+        tuple val(tf), val(chr), val(prefix), path(bed_files), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
 
     script:
         """
@@ -35,10 +35,10 @@ process create_eqtl_list {
     container 'roskamsh/bgen_env:0.2.0'
     
     input:
-        tuple val(chr), val(tf), val(prefix), path(bed_files), path(clumps)
+        tuple val(tf), val(chr), val(prefix), path(bed_files), path(clumps)
 
     output:
-        tuple val(chr), val(tf), val(prefix), path(bed_files), path("${tf}_independent_eQTLs.csv")
+        tuple val(tf), val(chr), val(prefix), path(bed_files), path("${tf}_independent_eQTLs.csv")
 
     script:
         """
