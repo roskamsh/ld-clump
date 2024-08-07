@@ -29,26 +29,27 @@ workflow preprocess_qtl_data {
             .set { tf_chr_eqtls_ch }
 
         // Identify CHRs either eQTLs or bQTLs belong to
-        read_and_filter_bQTLs.out.bqtl_chrs
+        read_and_filter_bQTLs.out.tf_chr_bqtls
             .splitCsv(header: true)
             .multiMap { 
                 row -> 
-                tf_chr: [row.tf, row.CHROM]
+                tf_chr_bqtl: [row.tf, row.CHROM, row.ID]
                 chr: [row.CHROM]
             }
-            .set { tf_chr_bqtls_ch }
+            .set { bqtls_ch }
 
         tf_chr_eqtls_ch
             .map { tf, chr, data -> chr }
-            .mix(tf_chr_bqtls_ch.chr.flatten())
+            .mix(bqtls_ch.chr.flatten())
             .unique()
             .set { chr_ch }
-        
-        //tfs_bqtls_ch = tfs.combine(bqtl_dir_ch)
-        //read_and_filter_bQTLs(tfs_bqtls_ch)
+
+        bqtls_ch.tf_chr_bqtl
+            .groupTuple(by: [0,1])
+            .set { tf_chr_bqtls_ch }
 
     emit:
     chrs = chr_ch
     tf_chr_eqtls = tf_chr_eqtls_ch 
-    //tfs_bqtls = tfs_bqtls_ch
+    tf_chr_bqtls = tf_chr_bqtls_ch
 }
