@@ -23,7 +23,7 @@ process read_and_filter_bQTLs {
     output:
     path "all_bQTLs.csv", emit: bqtls
     path "TF_list.csv", emit: tfs 
-    path "bQTL_CHR_list.csv", emit: bqtl_chrs
+    path "TF_CHR_bQTL_list.csv", emit: tf_chr_bqtls
 
     script:
     """
@@ -59,13 +59,13 @@ process read_and_filter_bQTLs {
     # Define TF list from results
     tfs = pd.DataFrame(list(results.tf.unique()))
     # Define bQTL-CHR list
-    filt = results[["tf","CHROM"]].copy()
+    filt = results[["tf","CHROM","ID"]].copy()
     filt["CHROM"] = filt["CHROM"].apply(remove_chr_prefix)
     filt = filt.drop_duplicates()
 
     results.to_csv("all_bQTLs.csv", index = False)
     tfs.to_csv("TF_list.csv", index = False, header=False)
-    filt.to_csv("bQTL_CHR_list.csv", index = False)
+    filt.to_csv("TF_CHR_bQTL_list.csv", index = False)
     """
 }
 
