@@ -23,5 +23,5 @@ workflow {
 
     generate_independent_snps(create_tf_bed_channel.out.tf_bed)
 
-    check_interactions(create_tf_bed_channel.out.bed_files)
+    check_interactions(preprocess_qtl_data.out.tf_chr_bqtls, create_tf_bed_channel.out.bed_files)
 }
