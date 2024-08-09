@@ -48,6 +48,7 @@ process create_eqtl_list {
         clumps = pd.read_csv("${clumps}", delim_whitespace=True)
         final_eqtls = clumps[["SNP"]]
         tf = "${tf}"
+        final_eqtls[["TF"]] = tf
         final_eqtls.to_csv(f"{tf}_independent_eQTLs.csv", index = False)
         """
 
