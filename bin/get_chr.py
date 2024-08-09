@@ -15,7 +15,7 @@ if __name__ == '__main__':
     data = get_input().data
     tf = get_input().tf
 
-    eqtl_data = pd.read_csv(data)
+    eqtl_data = pd.read_csv(data, delimiter="\t")
     eqtl_data = eqtl_data[eqtl_data.GeneSymbol == tf]
 
     # Check if TF is present in eQTLGen database
