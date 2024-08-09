@@ -7,11 +7,16 @@ process generate_info_score {
         tuple val(chr), val(prefix), path(files)
 
     output:
-        tuple val(chr), val(prefix), path(files), path("chr${chr}.snpstats")
+        tuple val(chr), val(prefix), path(files), path("chr${chr}.snpstats"), optional: true
 
     script:
         """
-        qctool -g ${prefix}${chr}.bgen -s ${prefix}${chr}.sample -snp-stats -osnp chr${chr}.snpstats
+        if [ -e "${prefix}${chr}.bgen" ]; then
+            qctool -g ${prefix}${chr}.bgen -s ${prefix}${chr}.sample -snp-stats -osnp chr${chr}.snpstats
+        else
+            echo "No BGEN file provided for chromosome ${chr}, skipping this chromosome."
+            exit 0
+        fi
         """
 }
 
