@@ -7,7 +7,7 @@ process filter_beds {
         tuple val(tf), val(chr), val(snps), val(prefix), path(files)
 
     output:
-        tuple val(tf), val(chr), val(prefix), path("${tf}_chr${chr}_filtered.{bed,bim,fam}"), optional: true
+        tuple val(tf), val(chr), val(snps), val(prefix), path("${tf}_chr${chr}_filtered.{bed,bim,fam}"), optional: true
 
     script:
         """
@@ -35,7 +35,7 @@ process merge_beds {
         path files
     
     output:
-        path "merged*"
+        tuple path("merged.bed"), path ("merged.bim"), path("merged.fam")
 
     script:
         """
@@ -66,7 +66,143 @@ process merge_beds {
         first_prefix=\${prefixes[0]}
         output_prefix="merged_dataset"
 
-        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged_dataset
+        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged
 
         """
+}
+
+process check_ld {
+    container 'roskamsh/plink1.9:0.1.1'
+
+    input:
+        tuple val(tf), val(snps), path(bed), path(bim), path(fam)
+
+    output:
+        path "ld_results.ld", optional: true
+
+    script:
+        """
+        echo "${snps}" | sed 's/[][]//g' | tr ', ' '\n' > snps.txt
+        
+        plink --bfile merged --extract snps.txt --make-bed --out extracted_data
+        plink --bfile extracted_data --r2 inter-chr --out ld_results
+        """
+
+}
+
+process create_bqtl_lists {
+    container 'roskamsh/bgen_env:0.2.0'
+
+    input:
+        tuple val(tf), val(snps)
+
+    output:
+        tuple val(tf), path("${tf}_bQTLs.csv")
+
+    script:
+        """
+        #!/usr/bin/env python
+
+        import pandas as pd
+
+        snps = "${snps}".strip("[]").replace(" ", "")
+        snp_list = snps.split(',')
+        df = pd.DataFrame(snp_list, columns=['SNP'])
+        df["TF"] = "${tf}"
+        df.to_csv("${tf}_bQTLs.csv", index = False)
+        """
+}
+
+process merge_QTLs {
+    container 'roskamsh/bgen_env:0.2.0' 
+    publishDir "$params.OUTDIR/snps"
+
+    input:
+        tuple val(group), val(tfs), path(eqtls), path(bqtls)
+
+    output:
+        path "final_eQTLs.csv", emit: eQTLs
+        path "final_bQTLs.csv", emit: bQTLs
+
+    script:
+        """
+        #!/usr/bin/env python 
+
+        import os
+        import pandas as pd
+
+        # List to hold the DataFrames
+        eqtl_list = []
+        bqtl_list = []
+
+        # Loop through files in the directory
+        for filename in os.listdir("."):
+            if "eQTLs" in filename: 
+                df = pd.read_csv(filename)  
+                eqtl_list.append(df) 
+            if "bQTLs" in filename:
+                df = pd.read_csv(filename)  
+                bqtl_list.append(df)  
+
+        # Concatenate all DataFrames in the list
+        eqtl_df = pd.concat(eqtl_list, ignore_index=True)
+        bqtl_df = pd.concat(bqtl_list, ignore_index=True)
+
+        # Save the combined DataFrame to a CSV file (optional)
+        eqtl_df.to_csv('final_eQTLs.csv', index=False)
+        bqtl_df.to_csv('final_bQTLs.csv', index=False) 
+        """
+
+}
+
+
+process generate_estimands {
+    container 'roskamsh/bgen_env:0.2.0'
+    publishDir "$params.OUTDIR/estimands"
+
+    input:
+        path bQTLs
+        path eQTLs
+
+    output:
+        path "estimands.yaml"
+
+    script:
+        """
+        #!/usr/bin/env python
+
+        import yaml
+        import pandas as pd
+        import numpy as np
+
+        bqtls = pd.read_csv("${bQTLs}")
+        eqtls = pd.read_csv("${eQTLs}")
+
+        ## Remove TFs in bqtls that are not contained in eqtls
+        bqtls = bqtls[bqtls['TF'].isin(eqtls.TF.unique())]
+
+        bqtl_dictionary = {key: bqtls.loc[bqtls['TF'] == key, 'SNP'].tolist() for key in bqtls['TF']}
+        eqtl_dictionary = {key: eqtls.loc[eqtls['TF'] == key, 'SNP'].tolist() for key in eqtls['TF']}
+
+        joined = {}
+
+        for key in bqtl_dictionary:
+            joined[key] = {'bQTLs': bqtl_dictionary[key], 'eQTLs': eqtl_dictionary[key]}
+
+        # Generate complete dictionary
+        data = {
+            'type': 'groups',
+            'estimands': [
+                {'type': 'IATE', 'orders': 2}
+            ],
+            'outcome_extra_covariates': ['Age','Sex'],
+            'variants': joined
+        }
+
+        # Write to YAML
+        with open('estimands.yaml', 'w') as file:
+            yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+
+        """
+
 }
