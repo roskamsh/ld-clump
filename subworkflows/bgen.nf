@@ -23,7 +23,17 @@ workflow preprocess_genetic_data {
             
         generate_info_score(chr_bgen_ch)
 
-        find_exclusion_snps(generate_info_score.out)
+        // Create new channel which creates tuple with CHR as first element 
+        generate_info_score.out.map { filepath ->
+            def filename = filepath.getName().toString()  // Extract the filename 
+            def (chromosome) = filename =~ /chr(\d+|X|Y)\.snpstats/ // Get the chromosome number 
+            return [chromosome[1], filepath] // return tuple
+        }
+        .combine(bgen_files_ch.prefix)
+        .combine(bgen_files_ch.files)
+        .set { chr_snpstats_bgen_ch }
+
+        find_exclusion_snps(chr_snpstats_bgen_ch)
 
         bgen_to_bed(find_exclusion_snps.out)
 
