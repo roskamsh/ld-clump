@@ -7,6 +7,7 @@ params.ASSEMBLY = "hg19"
 params.eQTLGEN_DATA = ""
 params.Concordant = "True"
 params.OUTDIR = "${launchDir}/output"
+params.SNPSTATS_CACHE = "$params.OUTDIR/info_scores"
 
 include { create_tf_bed_channel } from './subworkflows/channels.nf' 
 include { preprocess_qtl_data } from './subworkflows/qtls.nf'
