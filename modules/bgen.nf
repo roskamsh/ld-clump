@@ -1,21 +1,22 @@
 process generate_info_score {
     label 'moremem'
+    label 'moretime'
     container 'roskamsh/qctools:0.1.1'
-    publishDir("$params.OUTDIR/info_scores", pattern: "*.snpstats") 
+    storeDir("$params.SNPSTATS_CACHE")
 
     input:
         tuple val(chr), val(prefix), path(files)
 
     output:
-        tuple val(chr), val(prefix), path(files), path("chr${chr}.snpstats"), optional: true
+        path "chr${chr}.snpstats"
 
     script:
         """
         if [ -e "${prefix}${chr}.bgen" ]; then
             qctool -g ${prefix}${chr}.bgen -s ${prefix}${chr}.sample -snp-stats -osnp chr${chr}.snpstats
         else
-            echo "No BGEN file provided for chromosome ${chr}, skipping this chromosome."
-            exit 0
+            echo "No BGEN file provided for chromosome ${chr}, Creating empty file."
+            touch chr${chr}.snpstats
         fi
         """
 }
@@ -24,27 +25,33 @@ process find_exclusion_snps {
     container 'roskamsh/bgen_env:0.2.0'
 
     input:
-        tuple val(chr), val(prefix), path(files), path(snpstats)
+        tuple val(chr), path(snpstats), val(prefix), path(files)
 
     output:
-        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt")
+        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt"), optional: true
 
     script:
         """
         #!/usr/bin/env python
         import pandas as pd
 
-        info_score_threshold = float("${params.INFO_THRESHOLD}")
-        df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
-        df = df[df["info"] < info_score_threshold]
+        # Check is file is empty (ie. BGEN file not provided)
+        with open("${snpstats}", 'r') as file:
+            if file.read() == '':
+                print("${snpstats} is empty, exiting process...")
+            else:
+                # Generate snps2exclude file
+                info_score_threshold = float("${params.INFO_THRESHOLD}")
+                df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
+                df = df[df["info"] < info_score_threshold]
 
-        snps = df[["alternate_ids","rsid","chromosome","position","alleleA","alleleB"]]
-        snps.columns = ["SNPID","rsid","chromosome","position","alleleA","alleleB"] 
-        rsids = " ".join(snps.rsid.values)
+                snps = df[["alternate_ids","rsid","chromosome","position","alleleA","alleleB"]]
+                snps.columns = ["SNPID","rsid","chromosome","position","alleleA","alleleB"] 
+                rsids = " ".join(snps.rsid.values)
 
-        # Write rsids
-        with open("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt", "w") as text_file:
-            text_file.write(rsids)
+                # Write rsids
+                with open("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt", "w") as text_file:
+                    text_file.write(rsids)
         """
 }
 
