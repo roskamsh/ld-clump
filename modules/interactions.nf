@@ -1,7 +1,7 @@
 // This process filters each BED file by bQTLs of interest
 // If a bQTL is not contained in a BED file, this means it did not meet INFO_THRESHOLD, and will be excluded
 process filter_beds {
-    container 'roskamsh/plink1.9:0.1.1'
+    label 'plink_image'
 
     input:
         tuple val(tf), val(chr), val(snps), val(prefix), path(files)
@@ -28,7 +28,7 @@ process filter_beds {
 
 process merge_beds {
     label 'bigmem'
-    container 'roskamsh/plink1.9:0.1.1'
+    label 'plink_image'
     publishDir "$params.OUTDIR/merged_genotypes", mode: 'symlink'
     
     input:
@@ -72,7 +72,7 @@ process merge_beds {
 }
 
 process check_ld {
-    container 'roskamsh/plink1.9:0.1.1'
+    label 'plink_image'
 
     input:
         tuple val(tf), val(snps), path(bed), path(bim), path(fam)
@@ -91,7 +91,7 @@ process check_ld {
 }
 
 process create_bqtl_lists {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
 
     input:
         tuple val(tf), val(snps)
@@ -114,7 +114,7 @@ process create_bqtl_lists {
 }
 
 process merge_QTLs {
-    container 'roskamsh/bgen_env:0.2.0' 
+    label 'bgen_python_image'
     publishDir "$params.OUTDIR/snps"
 
     input:
@@ -157,7 +157,7 @@ process merge_QTLs {
 
 
 process generate_estimands {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
     publishDir "$params.OUTDIR/estimands"
 
     input:

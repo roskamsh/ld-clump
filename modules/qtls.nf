@@ -1,5 +1,5 @@
 process pull_eQTLs {
-    container 'roskamsh/commandlinetools:latest'
+    label 'command_line_image'
 
     when:
     params.eQTLGEN_DATA == ""
@@ -15,7 +15,7 @@ process pull_eQTLs {
 }
 
 process read_and_filter_bQTLs {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
 
     input:
     path DIR
@@ -70,7 +70,7 @@ process read_and_filter_bQTLs {
 }
 
 process identify_eqtl_chrs {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
 
     input:
     tuple val(tf), path(eqtlgen_data)

@@ -1,7 +1,7 @@
 process generate_info_score {
     label 'moremem'
     label 'moretime'
-    container 'roskamsh/qctools:0.1.1'
+    label 'qctool_image'
     storeDir("$params.SNPSTATS_CACHE")
 
     input:
@@ -22,7 +22,7 @@ process generate_info_score {
 }
 
 process find_exclusion_snps {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
 
     input:
         tuple val(chr), path(snpstats), val(prefix), path(files)
@@ -57,7 +57,7 @@ process find_exclusion_snps {
 
 process bgen_to_bed {
     label 'moremem'
-    container 'roskamsh/qctools:0.1.1'
+    label 'qctool_image'
 
     input:
         tuple val(chr), val(prefix), path(files), path(exclusion_snps)

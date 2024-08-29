@@ -1,5 +1,5 @@
 process create_assoc_file {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
     publishDir("$params.OUTDIR/assoc_files", pattern: "*.assoc")
 
     input:
@@ -16,7 +16,7 @@ process create_assoc_file {
 }
 
 process ld_clump {
-    container 'roskamsh/plink1.9:0.1.1'
+    label 'plink_image'
     publishDir "$params.OUTDIR/clumps"
 
     input:
@@ -32,7 +32,7 @@ process ld_clump {
 }
 
 process create_eqtl_list {
-    container 'roskamsh/bgen_env:0.2.0'
+    label 'bgen_python_image'
     
     input:
         tuple val(tf), val(chr), val(prefix), path(bed_files), path(clumps)
