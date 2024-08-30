@@ -11,7 +11,7 @@ process create_assoc_file {
 
     script:
         """
-        python ${script} --snps ${snps} --tf ${tf} --prefix ${prefix}_info_score_0.6_chr${chr}
+        python ${script} --snps ${snps} --tf ${tf} --prefix ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}
         """
 }
 
