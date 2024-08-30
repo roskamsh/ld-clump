@@ -21,7 +21,7 @@ if __name__ == '__main__':
     prefix = get_input().prefix
     
     bim_file = prefix + ".bim"
-    all_eqtls = pd.read_csv(snps)
+    all_eqtls = pd.read_csv(snps, delimiter = "\t")
     bed_snps = pd.read_csv(bim_file, delimiter = " ", header=None)
     bed_snps.columns = ["CHR","SNP_ID","GENETIC_DISTANCE","POS","REF","ALT"]
 
