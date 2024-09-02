@@ -23,7 +23,7 @@ process ld_clump {
         tuple val(tf), val(chr), val(prefix), path(bed_files), path(assoc)
 
     output:
-        tuple val(tf), val(chr), val(prefix), path("${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr}.{bed,bim,fam}"), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
+        tuple val(tf), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
 
     script:
         """
@@ -36,10 +36,10 @@ process create_eqtl_list {
     label 'bgen_python_image'
     
     input:
-        tuple val(tf), val(chr), val(prefix), path(bed_files), path(clumps)
+        tuple val(tf), path(clumps)
 
     output:
-        tuple val(tf), val(chr), val(prefix), path(bed_files), path("${tf}_independent_eQTLs.csv")
+        tuple val(tf), path("${tf}_independent_eQTLs.csv")
 
     script:
         """
