@@ -2,6 +2,7 @@
 // If a bQTL is not contained in a BED file, this means it did not meet INFO_THRESHOLD, and will be excluded
 process filter_beds {
     label 'plink_image'
+    label 'moremem'
 
     input:
         tuple val(tf), val(chr), val(snps), val(prefix), path(files)
@@ -27,7 +28,7 @@ process filter_beds {
 
 
 process merge_beds {
-    label 'bigmem'
+    label 'moremem'
     label 'plink_image'
     publishDir "$params.OUTDIR/merged_genotypes", mode: 'symlink'
     
