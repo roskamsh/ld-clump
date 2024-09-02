@@ -23,11 +23,12 @@ process ld_clump {
         tuple val(tf), val(chr), val(prefix), path(bed_files), path(assoc)
 
     output:
-        tuple val(tf), val(chr), val(prefix), path(bed_files), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
+        tuple val(tf), val(chr), val(prefix), path("${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr}.{bed,bim,fam}"), path("${tf}_clumped_r${params.R2_THRESHOLD}.clumped")
 
     script:
         """
-        plink --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 ${params.R2_THRESHOLD} --out ${tf}_clumped_r${params.R2_THRESHOLD}
+        plink2 --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr} --rm-dup force-first --make-bed --out ${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr}
+        plink --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 ${params.R2_THRESHOLD} --out ${tf}_clumped_r${params.R2_THRESHOLD}
         """
 }
 
