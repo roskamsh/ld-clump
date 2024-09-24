@@ -7,3 +7,9 @@ plink.log
 work/*
 trace*
 dag*
+*csv
+*log
+*txt
+*snpstats
+extracted_data*
+ld_results*
