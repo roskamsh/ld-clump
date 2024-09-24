@@ -11,7 +11,7 @@ process create_assoc_file {
 
     script:
         """
-        python ${script} --snps ${snps} --tf ${tf} --prefix ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}
+        python ${script} --snps ${snps} --tf ${tf} --prefix filt.${prefix}${chr}
         """
 }
 
@@ -27,8 +27,7 @@ process ld_clump {
 
     script:
         """
-        plink2 --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr} --rm-dup force-first --make-bed --out ${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr}
-        plink --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_no_duplicates_chr${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 ${params.R2_THRESHOLD} --out ${tf}_clumped_r${params.R2_THRESHOLD}
+        plink --bfile filt.${prefix}${chr} --clump ${assoc} --clump-p1 5e-6 --clump-p2 0.05 --clump-r2 ${params.R2_THRESHOLD} --out ${tf}_clumped_r${params.R2_THRESHOLD}
         """
 }
 
