@@ -28,30 +28,43 @@ process find_exclusion_snps {
         tuple val(chr), path(snpstats), val(prefix), path(files)
 
     output:
-        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt"), optional: true
+        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt"), optional: true
 
     script:
         """
         #!/usr/bin/env python
         import pandas as pd
 
-        # Check is file is empty (ie. BGEN file not provided)
+        # Check if file is empty (ie. BGEN file not provided)
         with open("${snpstats}", 'r') as file:
             if file.read() == '':
                 print("${snpstats} is empty, exiting process...")
             else:
                 # Generate snps2exclude file
                 info_score_threshold = float("${params.INFO_THRESHOLD}")
+                maf_threshold = float("${params.MAF_THRESHOLD}")
                 df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
-                df = df[df["info"] < info_score_threshold]
 
-                snps = df[["alternate_ids","rsid","chromosome","position","alleleA","alleleB"]]
-                snps.columns = ["SNPID","rsid","chromosome","position","alleleA","alleleB"] 
-                rsids = " ".join(snps.rsid.values)
+                # SNPs that fail QC measurements 
+                rsidsfailQC = list(df[(df["info"] < info_score_threshold) | (df["minor_allele_frequency"] < maf_threshold)].rsid.values)
+
+                # Identify SNPs to include after imposing these filter
+                df2include = df[~df['rsid'].isin(rsidsfailQC)]
+
+                # Identify any remaining multiallelc SNPs
+                multiallelic_mask = df2include["rsid"].duplicated(keep=False)  # keep=False marks all duplicates as True
+                # Filter the DataFrame to show only the duplicated rows
+                multiallelic_df = df2include[multiallelic_mask]
+
+                # Add multiallelic SNPs remaining to rsids2exclude
+                multiallelic_snps = list(multiallelic_df.rsid.unique())
+                rsids2exclude = rsidsfailQC + multiallelic_snps
+
+                rsids = " ".join(rsids2exclude)
 
                 # Write rsids
-                with open("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}.txt", "w") as text_file:
-                    text_file.write(rsids)
+                with open("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt", "w") as text_file:
+                    text_file.write(rsids) 
         """
 }
 
@@ -63,7 +76,7 @@ process bgen_to_bed {
         tuple val(chr), val(prefix), path(files), path(exclusion_snps)
 
     output:
-        tuple val(chr), val(prefix), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bed"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bim"), path("${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.fam")
+        tuple val(chr), val(prefix), path("filt.${prefix}${chr}.bed"), path("filt.${prefix}${chr}.bim"), path("filt.${prefix}${chr}.fam")
 
     script:
         """
@@ -80,6 +93,6 @@ process bgen_to_bed {
                -s ${prefix}${chr}.sample \
                -excl-rsids ${exclusion_snps} \
                -excl-range \$ranges \
-               -og "${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr}.bed"
+               -og "filt.${prefix}${chr}.bed"
         """
 }
