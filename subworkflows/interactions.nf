@@ -28,7 +28,6 @@ workflow check_interactions {
         create_bqtl_lists(bqtls_per_tf)
 
         tf_eqtls 
-            .map { tf, chr, prefix, bed_files, csv -> [tf, csv] }
             .join(create_bqtl_lists.out) // Only TFs with eQTLs and bQTLs will remain
             .map { tf, eqtls, bqtls -> ["group", tf, eqtls, bqtls]}
             .groupTuple()
