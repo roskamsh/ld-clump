@@ -8,14 +8,14 @@ process filter_beds {
         tuple val(tf), val(chr), val(snps), val(prefix), path(files)
 
     output:
-        tuple val(tf), val(chr), val(snps), val(prefix), path("${tf}_chr${chr}_filtered.{bed,bim,fam}"), optional: true
+        tuple val(tf), val(chr), val(snps), val(prefix), path("${tf}.chr${chr}.filt.bqtls.{bed,bim,fam}"), optional: true
 
     script:
         """
         echo "${snps}" | sed 's/[][]//g' | tr ', ' '\n' > snps.txt
 
         # Run this even if it encounters an error
-        plink --bfile ${prefix}_info_score_${params.INFO_THRESHOLD}_chr${chr} --extract snps.txt --make-bed --out ${tf}_chr${chr}_filtered 2> plink_error.log || true
+        plink --bfile filt.${prefix}${chr} --extract snps.txt --make-bed --out ${tf}.chr${chr}.filt.bqtls 2> plink_error.log || true
 
         # Check specific error here, if variants do not pass thresholds, still exit with exit code 0
         if grep -q "Error: No variants remaining after --extract" plink_error.log; then
@@ -25,7 +25,6 @@ process filter_beds {
         """
 
 }
-
 
 process merge_beds {
     label 'moremem'
@@ -67,8 +66,8 @@ process merge_beds {
         first_prefix=\${prefixes[0]}
         output_prefix="merged_dataset"
 
-        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged
-
+        # Merge all BED files using plink
+        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged 
         """
 }
 
@@ -79,15 +78,61 @@ process check_ld {
         tuple val(tf), val(snps), path(bed), path(bim), path(fam)
 
     output:
-        path "ld_results.ld", optional: true
+        path "${tf}_ld_results.ld", optional: true
 
     script:
         """
         echo "${snps}" | sed 's/[][]//g' | tr ', ' '\n' > snps.txt
         
         plink --bfile merged --extract snps.txt --make-bed --out extracted_data
-        plink --bfile extracted_data --r2 inter-chr --out ld_results
+        plink --bfile extracted_data --r2 inter-chr --out ${tf}_ld_results
         """
+
+}
+
+process compile_ld_results {
+    label 'bgen_python_image'
+    publishDir"$params.OUTDIR/snps", mode: 'copy'
+
+    input:
+    path ld_files
+
+    output:
+    path "bQTLs_in_LD.csv", optional: true    
+
+    script:
+    """
+    #!/usr/bin/env python
+
+    import pandas as pd
+    import os
+
+    r2_threshold = float(${params.R2_THRESHOLD})
+    results_dir = "."
+    files = [f for f in os.listdir(results_dir) if f.endswith('_ld_results.ld')]
+
+    compiled_dataframes = []
+
+    # Iterate through the list of files
+    for file in files:
+        df = pd.read_csv(os.path.join(results_dir,file), delim_whitespace=True, header=0)
+        if df.empty:
+            print(f"Skipping empty file: {file}. No variants in LD with one another.")
+            continue
+        # Add a new column for TF name
+        df['TF'] = file.replace('_ld_results.ld', '')
+        df = df[df['R2'] >= r2_threshold]
+        compiled_dataframes.append(df)
+
+    if compiled_dataframes:
+        compiled_df = pd.concat(compiled_dataframes, ignore_index=True)
+        print("Number of bQTL pairs in LD across all TFs inspected:", compiled_df.shape[0])
+        print("Saving bQTLs in LD to file: bQTLs_in_LD.csv")
+        compiled_df.to_csv("bQTLs_in_LD.csv", index = False)
+    else:
+        compiled_df = pd.DataFrame()
+        print("No bQTLs found to be in LD with one another. Exiting...")
+    """
 
 }
 
@@ -116,7 +161,7 @@ process create_bqtl_lists {
 
 process merge_QTLs {
     label 'bgen_python_image'
-    publishDir "$params.OUTDIR/snps"
+    publishDir "$params.OUTDIR/snps", mode: 'copy'
 
     input:
         tuple val(group), val(tfs), path(eqtls), path(bqtls)
@@ -159,7 +204,7 @@ process merge_QTLs {
 
 process generate_estimands {
     label 'bgen_python_image'
-    publishDir "$params.OUTDIR/estimands"
+    publishDir "$params.OUTDIR/estimands", mode: 'copy'
 
     input:
         path bQTLs
@@ -205,5 +250,4 @@ process generate_estimands {
             yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
         """
-
 }
