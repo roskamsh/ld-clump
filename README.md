@@ -23,7 +23,7 @@ conda activate nextflow
 
 The configuration for a given run is specified in a run-specific config file, which you create and is dataset-specific. An example is shown in `genomicc.config`. The following parameters are required:
 
-* BGEN_FILES [ required ] : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
+* `BGEN_FILES [ required ]` : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
 * ASSEMBLY [ required ] : either grch37 or grch38 (also will accept hg19 or hg38), which is used to define problem areas of the genome to exclude (See: https://github.com/gabraham/flashpca/blob/master/exclusion_regions_hg19.txt). 
 * eQTLGEN_DATA [optional, default: 2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt from eQTLGen]: Downloaded data from eQTLGen, in the form of a tab-separated text file. This contains all SNPs you would like to run LD clumping on, which are associated with a given transcription factor. This should be formatted the same as the output from eQTLGen (See: https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz). The SNP IDs must be in the same format as the IDs in your BGEN_FILES. If this is not provided, the file will be automatically pulled from eQTLGen.
 * R2_THRESHOLD [optional, default: 0.8] : R-squared threshold to use for idenftifying which SNPs are in LD with one another. Default is 0.8. 
