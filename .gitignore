@@ -1,6 +1,6 @@
 .vscode/*
 input/*
-output/*
+output*
 logs/*
 plink.log
 .nextflow*
