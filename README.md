@@ -23,14 +23,14 @@ conda activate nextflow
 
 The configuration for a given run is specified in a run-specific config file, which you create and is dataset-specific. An example is shown in `genomicc.config`. The following parameters are required:
 
-* `BGEN_FILES [ required ]` : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
-* ASSEMBLY [ required ] : either grch37 or grch38 (also will accept hg19 or hg38), which is used to define problem areas of the genome to exclude (See: https://github.com/gabraham/flashpca/blob/master/exclusion_regions_hg19.txt). 
-* eQTLGEN_DATA [optional, default: 2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt from eQTLGen]: Downloaded data from eQTLGen, in the form of a tab-separated text file. This contains all SNPs you would like to run LD clumping on, which are associated with a given transcription factor. This should be formatted the same as the output from eQTLGen (See: https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz). The SNP IDs must be in the same format as the IDs in your BGEN_FILES. If this is not provided, the file will be automatically pulled from eQTLGen.
-* R2_THRESHOLD [optional, default: 0.8] : R-squared threshold to use for idenftifying which SNPs are in LD with one another. Default is 0.8. 
-* INFO_THRESHOLD [ optional, default: 0.9 ] : Info score threshold set on imputation quality. Anything below this value will not be considered for hard-calling genotypes from the BGEN files. The default is 0.9.
-* MAF_THRESHOLD [ optional, default: 0.01 ] : Minor allele frequency below which SNPs will be filtered out from your final estimands file. 
-* OUTDIR [ optional, default: output ] : Output directory for results.
-* SNPSTATS_CACHE [ optional, default: OUTDIR/info_scores ] : Cache for saving snp stats output from QCtoolv2. This contains the output from the process bgen::generate_info_score(), and includes the following crucial information for every SNP in your BGEN_FILES: rsid, info, minor_allele_frequency.
+* `BGEN_FILES` [ required ] : absolute path to the BGEN files for your cohort-of-interest. This should be specified using brace expansion for each chromosome as well as each file type (bgen, bgen.bgi, sample).
+* `ASSEMBLY` [ required ] : either grch37 or grch38 (also will accept hg19 or hg38), which is used to define problem areas of the genome to exclude (See: https://github.com/gabraham/flashpca/blob/master/exclusion_regions_hg19.txt). 
+* `eQTLGEN_DATA` [optional, default: 2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt from eQTLGen]: Downloaded data from eQTLGen, in the form of a tab-separated text file. This contains all SNPs you would like to run LD clumping on, which are associated with a given transcription factor. This should be formatted the same as the output from eQTLGen (See: https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz). The SNP IDs must be in the same format as the IDs in your `BGEN_FILES`. If this is not provided, the file will be automatically pulled from eQTLGen.
+* `R2_THRESHOLD` [optional, default: 0.8] : R-squared threshold to use for idenftifying which SNPs are in LD with one another. Default is 0.8. 
+* `INFO_THRESHOLD` [ optional, default: 0.9 ] : Info score threshold set on imputation quality. Anything below this value will not be considered for hard-calling genotypes from the BGEN files. The default is 0.9.
+* `MAF_THRESHOLD` [ optional, default: 0.01 ] : Minor allele frequency below which SNPs will be filtered out from your final estimands file. 
+* `OUTDIR` [ optional, default: output ] : Output directory for results.
+* `SNPSTATS_CACHE` [ optional, default: `OUTDIR`/info_scores ] : Cache for saving snp stats output from QCtoolv2. This contains the output from the process bgen::generate_info_score(), and includes the following crucial information for every SNP in your `BGEN_FILES`: rsid, info, minor_allele_frequency.
 
 ## Run
 
