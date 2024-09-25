@@ -32,13 +32,13 @@ The configuration for a given run is specified in a run-specific config file, wh
 * OUTDIR [ optional, default: output ] : Output directory for results.
 * SNPSTATS_CACHE [ optional, default: OUTDIR/info_scores ] : Cache for saving snp stats output from QCtoolv2. This contains the output from the process bgen::generate_info_score(), and includes the following crucial information for every SNP in your BGEN_FILES: rsid, info, minor_allele_frequency.
 
-## Run profiles
+## Run
+
+### Run profiles
 
 The following profiles are available in this pipeline:
 * eddie
 * ultra2
-
-## Run
 
 To run this pipeline, just run the following command:
 
