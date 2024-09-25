@@ -1,4 +1,4 @@
-include { filter_beds; merge_beds; check_ld; create_bqtl_lists; merge_QTLs; generate_estimands } from '../modules/interactions.nf'
+include { filter_beds; merge_beds; check_ld; compile_ld_results; create_bqtl_lists; merge_QTLs; generate_estimands } from '../modules/interactions.nf'
 
 workflow check_interactions {
     take:
@@ -15,15 +15,17 @@ workflow check_interactions {
             .collect()
             .set { filtered_bed_files }
         
-        merge_beds(filtered_bed_files)
-
         filter_beds.out 
             .map { tf, chr, snps, prefix, files -> [tf, snps] }
             .groupTuple()
             .map { tf, snps -> [tf, snps.flatten()]}
             .set { bqtls_per_tf }
 
+        merge_beds(filtered_bed_files)
+
         check_ld(bqtls_per_tf.combine(merge_beds.out))
+
+        compile_ld_results(check_ld.out.collect())
         
         create_bqtl_lists(bqtls_per_tf)
 
