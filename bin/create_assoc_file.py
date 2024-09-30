@@ -21,7 +21,7 @@ if __name__ == '__main__':
     prefix = get_input().prefix
     
     bim_file = prefix + ".bim"
-    all_eqtls = pd.read_csv(snps)
+    all_eqtls = pd.read_csv(snps, delimiter = "\t")
     bed_snps = pd.read_csv(bim_file, delimiter = " ", header=None)
     bed_snps.columns = ["CHR","SNP_ID","GENETIC_DISTANCE","POS","REF","ALT"]
 
@@ -34,11 +34,14 @@ if __name__ == '__main__':
     new_ids = [0]*nrow
     ref_alleles = [0]*nrow
     alt_alleles = [0]*nrow
+
     for i, snp in enumerate(eqtls.SNP.values):
         pos = eqtls.iloc[i]['SNPPos']
         allele1 = eqtls.iloc[i]['AssessedAllele']
         allele2 = eqtls.iloc[i]['OtherAllele']
 
+        # I think a bunch of the eQTLs are not in this bed file, so we need to catch these cases
+        # This is occuring when the eQTLs fall in the "exclusion regions"
         row = bed_snps.index[
                     (bed_snps['POS']==pos)
                     ]
@@ -64,8 +67,8 @@ if __name__ == '__main__':
                 alt_alleles[i] = alt_allele
 
     eqtls['BGEN_ID'] = new_ids
-    eqtls['A1'] = ref_allele
-    eqtls['A2'] = alt_allele
+    eqtls['A1'] = ref_alleles
+    eqtls['A2'] = alt_alleles
 
     # Remove missing values
     eqtls = eqtls.dropna(subset = ["BGEN_ID"])
@@ -74,4 +77,8 @@ if __name__ == '__main__':
     eqtls = eqtls[["BGEN_ID","SNP","SNPChr","SNPPos","A1","A2","Pvalue"]]
     eqtls.columns = ["SNP","RSID","CHR","BP","A1","A2","P"]
     
-    eqtls.to_csv(f"{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")
+    if eqtls.empty:
+        print("cis-eQTLs lie within exclusion regions, no SNPs found in processed .bim file. Exiting...")
+        exit(0)
+    else:
+        eqtls.to_csv(f"{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")

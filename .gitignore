@@ -1,8 +1,16 @@
 .vscode/*
 input/*
-output/*
+output*
 logs/*
 plink.log
 .nextflow*
 work/*
 trace*
+dag*
+*csv
+*log
+*txt
+*snpstats
+extracted_data*
+ld_results*
+generate_info_score*

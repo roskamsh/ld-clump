@@ -1,14 +1,22 @@
 import pandas as pd
 
-df = pd.read_csv("output/chr6_imputation_stats.snpstats", delimiter="\t", skiprows=9)
-df = df[df["info"] < 0.6]
+df = pd.read_csv("chr16.snpstats", delimiter="\t", skiprows=9)
+rsidsfailQC = list(df[(df["info"] < 0.9) | (df["minor_allele_frequency"] < 0.01)].rsid.values)
 
-snps = df[["alternate_ids","rsid","chromosome","position","alleleA","alleleB"]]
-snps.columns = ["SNPID","rsid","chromosome","position","alleleA","alleleB"] 
+## Identify SNPs to include after imposing these filter
+df2include = df[~df['rsid'].isin(rsidsfailQC)]
 
-rsids = " ".join(snps.rsid.values)
+# Identify any remaining multiallelc SNPs
+duplicated_mask = df2include["rsid"].duplicated(keep=False)  # keep=False marks all duplicates as True
+# Filter the DataFrame to show only the duplicated rows
+duplicated_rows = df2include[duplicated_mask]
+
+# Add multiallelic SNPs remaining to rsids2exclude
+multiallelic_snps = list(duplicated_rows.rsid.unique())
+rsids2exclude = rsidsfailQC + multiallelic_snps
+
+rsids = " ".join(rsids2exclude)
 
 # Write rsids
-with open("output/chr6_rsids2exclude_info_score0.6.txt", "w") as text_file:
+with open("output/chr16_rsids2exclude_info_score0.9.txt", "w") as text_file:
     text_file.write(rsids)
-
