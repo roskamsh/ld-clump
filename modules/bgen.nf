@@ -69,6 +69,7 @@ process find_exclusion_snps {
 }
 
 process bgen_to_bed {
+    publishDir("$params.OUTDIR/filtered_bed_files")
     label 'moremem'
     label 'qctool_image'
 

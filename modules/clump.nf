@@ -17,6 +17,7 @@ process create_assoc_file {
 
 process ld_clump {
     label 'plink_image'
+    label 'moremem'
     publishDir "$params.OUTDIR/clumps"
 
     input:
