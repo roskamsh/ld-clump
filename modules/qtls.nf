@@ -38,7 +38,7 @@ process read_and_filter_bQTLs {
             return s
 
     dir = "${DIR}"
-    concordant_value = bool("${params.Concordant}")
+    ASB_quality = str("${params.ASB_quality}")
 
     # Read in all CSV files, and filter by Concordant value
     files = os.listdir(dir)
@@ -50,8 +50,8 @@ process read_and_filter_bQTLs {
     for file in files:
         file_path = os.path.join(dir, file)
         df = pd.read_csv(file_path)
-        if "${params.Concordant}" != "":
-            df = df[df.Concordant == concordant_value] 
+        if "${params.ASB_quality}" != "":
+            df = df[df.ASB_quality == ASB_quality] 
         dataframes.append(df)
 
     results = pd.concat(dataframes, ignore_index=True)
@@ -81,7 +81,7 @@ process identify_eqtl_chrs {
 
     script:
     """
-    python ${script} --data ${eqtlgen_data} --tf ${tf} > chr.txt
+    python ${script} --data ${eqtlgen_data} --tf ${tf} --qtltype eQTL > chr.txt
     if grep -q "Not found in eQTLGen" "chr.txt"; then
         echo "The TF, ${tf}, is not found in eQTLGen"
     else
@@ -89,4 +89,20 @@ process identify_eqtl_chrs {
     fi
     """ 
 
+}
+
+process identify_transactors {
+    label 'bgen_python_image'
+
+    input:
+    tuple val(tf), path(eqtl_data), path(transactor_data)
+    path script
+
+    output:
+    tuple val(tf), path("*_transactor_QTLs.csv"), optional: true
+
+    script:
+    """
+    python ${script} --eqtls ${eqtl_data} --transactors ${transactor_data} --tf ${tf} 
+    """ 
 }
