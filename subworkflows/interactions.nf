@@ -1,42 +1,27 @@
-include { filter_beds; merge_beds; check_ld; compile_ld_results; create_bqtl_lists; merge_QTLs; generate_estimands } from '../modules/interactions.nf'
+include { check_ld; compile_ld_results; create_bqtl_lists; merge_QTLs; generate_estimands } from '../modules/interactions.nf'
 
 workflow check_interactions {
     take:
-        tf_chr_bqtls
+        bqtls_by_tf
+        transactors_by_tf
         bed_files
-        tf_eqtls
 
     main:
-        filter_beds(tf_chr_bqtls.combine(bed_files))
-
-        filter_beds.out
-            .map { tf, chr, snps, prefix, files -> [files]}
-            .flatten()
-            .collect()
-            .set { filtered_bed_files }
-        
-        filter_beds.out 
-            .map { tf, chr, snps, prefix, files -> [tf, snps] }
-            .groupTuple()
-            .map { tf, snps -> [tf, snps.flatten()]}
-            .set { bqtls_per_tf }
-
-        merge_beds(filtered_bed_files)
-
-        check_ld(bqtls_per_tf.combine(merge_beds.out))
+        // Check whether bQTLs are in LD & save this information
+        check_ld(bqtls_by_tf.join(transactors_by_tf).combine(bed_files))
 
         compile_ld_results(check_ld.out.collect())
         
-        create_bqtl_lists(bqtls_per_tf)
+        // by joining together, we ensure only TFs with transactors are passed on
+        create_bqtl_lists(bqtls_by_tf.join(transactors_by_tf)) 
 
-        tf_eqtls 
-            .join(create_bqtl_lists.out) // Only TFs with eQTLs and bQTLs will remain
-            .map { tf, eqtls, bqtls -> ["group", tf, eqtls, bqtls]}
+        create_bqtl_lists.out
+            .map { tf, bqtls, transactors -> ["group", tf, bqtls, transactors]}
             .groupTuple()
             .set { final_qtls }
-
+        
         merge_QTLs(final_qtls)
 
-        generate_estimands(merge_QTLs.out.bQTLs, merge_QTLs.out.eQTLs)
+        generate_estimands(merge_QTLs.out.bQTLs, merge_QTLs.out.transactors)
 
 }

@@ -21,26 +21,26 @@ if __name__ == '__main__':
     prefix = get_input().prefix
     
     bim_file = prefix + ".bim"
-    all_eqtls = pd.read_csv(snps, delimiter = "\t")
-    bed_snps = pd.read_csv(bim_file, delimiter = " ", header=None)
-    bed_snps.columns = ["CHR","SNP_ID","GENETIC_DISTANCE","POS","REF","ALT"]
+    transactors = pd.read_csv(snps)
+    bed_snps = pd.read_csv(bim_file, delim_whitespace=True, header=None)
+    bed_snps.columns = ["CHR","SNP_ID","GENETIC_DISTANCE","POS","A1","A2"]
 
-    # Filter all_eqtls for only TF-of-interest
-    eqtls = all_eqtls[all_eqtls.GeneSymbol==tf].copy()
+    # Ensure only TF-of-interest
+    transactors = transactors[transactors.GeneSymbol==tf].copy()
 
     # Loop through eqtls and identify where in the bed_snps there contains a match
     # Then match this SNP_ID to the row in eqtls
-    nrow = eqtls.shape[0]
+    nrow = transactors.shape[0]
     new_ids = [0]*nrow
-    ref_alleles = [0]*nrow
-    alt_alleles = [0]*nrow
+    first_alleles = [0]*nrow
+    second_alleles = [0]*nrow
 
-    for i, snp in enumerate(eqtls.SNP.values):
-        pos = eqtls.iloc[i]['SNPPos']
-        allele1 = eqtls.iloc[i]['AssessedAllele']
-        allele2 = eqtls.iloc[i]['OtherAllele']
+    for i, snp in enumerate(transactors.SNP.values):
+        pos = transactors.iloc[i]['SNPPos']
+        allele1 = transactors.iloc[i]['AssessedAllele']
+        allele2 = transactors.iloc[i]['OtherAllele']
 
-        # I think a bunch of the eQTLs are not in this bed file, so we need to catch these cases
+        # Some transactors are not in this bed file, so we need to catch these cases
         # This is occuring when the eQTLs fall in the "exclusion regions"
         row = bed_snps.index[
                     (bed_snps['POS']==pos)
@@ -49,36 +49,36 @@ if __name__ == '__main__':
 
         if sub.shape[0]==0:
             new_ids[i] = pd.NA
-            ref_alleles[i] = pd.NA
-            alt_alleles[i] = pd.NA
+            first_alleles[i] = pd.NA
+            second_alleles[i] = pd.NA
 
         # Loop through in case there are multiple SNPs at that position
         for j, matched_snp in enumerate(sub.SNP_ID.values):
-            ref_allele = sub.iloc[j]['REF']
-            alt_allele = sub.iloc[j]['ALT']
+            first_allele = sub.iloc[j]['A1']
+            second_allele = sub.iloc[j]['A2']
             # Check for a matching of alleles in either order
-            bed_snp_alleles = [ref_allele, alt_allele]
+            bed_snp_alleles = [first_allele, second_allele]
             eqtlgen_alleles = [allele1, allele2]
 
             # Checks if elements match, regardless of ordering
             if set(bed_snp_alleles) == set(eqtlgen_alleles):
                 new_ids[i] = matched_snp
-                ref_alleles[i] = ref_allele
-                alt_alleles[i] = alt_allele
+                first_alleles[i] = first_allele
+                second_alleles[i] = second_allele
 
-    eqtls['BGEN_ID'] = new_ids
-    eqtls['A1'] = ref_alleles
-    eqtls['A2'] = alt_alleles
+    transactors['BGEN_ID'] = new_ids
+    transactors['A1'] = first_alleles
+    transactors['A2'] = second_alleles
 
     # Remove missing values
-    eqtls = eqtls.dropna(subset = ["BGEN_ID"])
+    transactors = transactors.dropna(subset = ["BGEN_ID"])
 
     # Reformat to match what is expected in PLINK for LD-clumping
-    eqtls = eqtls[["BGEN_ID","SNP","SNPChr","SNPPos","A1","A2","Pvalue"]]
-    eqtls.columns = ["SNP","RSID","CHR","BP","A1","A2","P"]
+    transactors = transactors[["BGEN_ID","SNP","SNPChr","SNPPos","A1","A2","Pvalue"]]
+    transactors.columns = ["SNP","RSID","CHR","BP","A1","A2","P"]
     
-    if eqtls.empty:
+    if transactors.empty:
         print("cis-eQTLs lie within exclusion regions, no SNPs found in processed .bim file. Exiting...")
         exit(0)
     else:
-        eqtls.to_csv(f"{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")
+        transactors.to_csv(f"{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")

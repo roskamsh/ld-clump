@@ -5,15 +5,16 @@ process generate_info_score {
     storeDir("$params.SNPSTATS_CACHE")
 
     input:
-        tuple val(chr), val(prefix), path(files)
+        tuple val(chr), val(snps), val(prefix), path(files)
 
     output:
-        path "chr${chr}.snpstats"
+        tuple val(chr), path("chr${chr}.snpstats")
 
     script:
         """
+        echo "${snps}" | sed 's/[][]//g' | tr ', ' '\n' > snps.txt
         if [ -e "${prefix}${chr}.bgen" ]; then
-            qctool -g ${prefix}${chr}.bgen -s ${prefix}${chr}.sample -snp-stats -osnp chr${chr}.snpstats
+            qctool -g ${prefix}${chr}.bgen -s ${prefix}${chr}.sample -incl-rsids snps.txt -snp-stats -osnp chr${chr}.snpstats
         else
             echo "No BGEN file provided for chromosome ${chr}, Creating empty file."
             touch chr${chr}.snpstats
@@ -21,14 +22,14 @@ process generate_info_score {
         """
 }
 
-process find_exclusion_snps {
+process find_inclusion_snps {
     label 'bgen_python_image'
 
     input:
         tuple val(chr), path(snpstats), val(prefix), path(files)
 
     output:
-        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt"), optional: true
+        tuple val(chr), val(prefix), path(files), path("chr${chr}_rsids2include_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt"), optional: true
 
     script:
         """
@@ -43,41 +44,39 @@ process find_exclusion_snps {
                 # Generate snps2exclude file
                 info_score_threshold = float("${params.INFO_THRESHOLD}")
                 maf_threshold = float("${params.MAF_THRESHOLD}")
-                df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=9)
+                df = pd.read_csv("${snpstats}", delimiter="\t", skiprows=10)
 
                 # SNPs that fail QC measurements 
-                rsidsfailQC = list(df[(df["info"] < info_score_threshold) | (df["minor_allele_frequency"] < maf_threshold)].rsid.values)
+                rsidsPassQC = list(df[(df["info"] >= info_score_threshold) | (df["minor_allele_frequency"] >= maf_threshold)].rsid.values) 
 
-                # Identify SNPs to include after imposing these filter
-                df2include = df[~df['rsid'].isin(rsidsfailQC)]
+                # Remove any multiallelic SNPs
+                biallelic_df = df.drop_duplicates(subset = "rsid", keep = False)
 
-                # Identify any remaining multiallelc SNPs
-                multiallelic_mask = df2include["rsid"].duplicated(keep=False)  # keep=False marks all duplicates as True
-                # Filter the DataFrame to show only the duplicated rows
-                multiallelic_df = df2include[multiallelic_mask]
+                # Only keep SNPs passing QC thresholds
+                rsidsPassQC = list(biallelic_df[
+                                                    (biallelic_df["info"] >= info_score_threshold) | 
+                                                    (biallelic_df["minor_allele_frequency"] >= maf_threshold)
+                                                ]
+                                            .rsid.values
+                                    )
 
-                # Add multiallelic SNPs remaining to rsids2exclude
-                multiallelic_snps = list(multiallelic_df.rsid.unique())
-                rsids2exclude = rsidsfailQC + multiallelic_snps
-
-                rsids = " ".join(rsids2exclude)
+                rsids = " ".join(rsidsPassQC)
 
                 # Write rsids
-                with open("chr${chr}_rsids2exclude_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt", "w") as text_file:
-                    text_file.write(rsids) 
+                with open("chr${chr}_rsids2include_info_score${params.INFO_THRESHOLD}_maf${params.MAF_THRESHOLD}.txt", "w") as text_file:
+                    text_file.write(rsids)
         """
 }
 
 process bgen_to_bed {
     publishDir("$params.OUTDIR/filtered_bed_files")
-    label 'moremem'
     label 'qctool_image'
 
     input:
-        tuple val(chr), val(prefix), path(files), path(exclusion_snps)
+        tuple val(chr), val(prefix), path(files), path(inclusion_snps)
 
     output:
-        tuple val(chr), val(prefix), path("filt.${prefix}${chr}.bed"), path("filt.${prefix}${chr}.bim"), path("filt.${prefix}${chr}.fam")
+        path "info${params.INFO_THRESHOLD}.maf${params.MAF_THRESHOLD}.${prefix}${chr}*"
 
     script:
         """
@@ -92,8 +91,53 @@ process bgen_to_bed {
 
         qctool -g ${prefix}${chr}.bgen \
                -s ${prefix}${chr}.sample \
-               -excl-rsids ${exclusion_snps} \
+               -incl-rsids ${inclusion_snps} \
                -excl-range \$ranges \
-               -og "filt.${prefix}${chr}.bed"
+               -og "info${params.INFO_THRESHOLD}.maf${params.MAF_THRESHOLD}.${prefix}${chr}.bed"
+        """
+}
+
+process merge_beds {
+    label 'moremem'
+    label 'plink_image'
+    publishDir "$params.OUTDIR/merged_genotypes", mode: 'symlink'
+    
+    input:
+        path files
+    
+    output:
+        tuple path("merged.bed"), path ("merged.bim"), path("merged.fam")
+
+    script:
+        """
+        # Step 1: Identify all BED files and extract their prefixes
+        bed_files=(\$(ls *.bed))
+        prefixes=()
+
+        for bed_file in "\${bed_files[@]}"; do
+            prefix="\${bed_file%.bed}"
+            prefixes+=("\$prefix")
+        done
+
+        # Check if there are enough files to merge
+        if [ \${#prefixes[@]} -lt 2 ]; then
+            echo "Not enough BED files to merge. At least two BED files are required."
+            exit 1
+        fi
+
+        # Step 2: Create a merge list file (excluding the first prefix)
+        merge_list="mergelist.txt"
+        > \$merge_list
+
+        for prefix in "\${prefixes[@]:1}"; do
+            echo "\$prefix" >> \$merge_list
+        done
+
+        # Step 3: Run PLINK to merge the datasets
+        first_prefix=\${prefixes[0]}
+        output_prefix="merged_dataset"
+
+        # Merge all BED files using plink
+        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged 
         """
 }

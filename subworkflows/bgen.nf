@@ -1,8 +1,8 @@
-include { generate_info_score; find_exclusion_snps; bgen_to_bed } from '../modules/bgen.nf'
+include { generate_info_score; find_inclusion_snps; bgen_to_bed; merge_beds } from '../modules/bgen.nf'
 
 workflow preprocess_genetic_data {
     take:
-        chr_ch
+        snps_by_chr_ch
 
     main:
         // Create BGEN channel for relevant chromosomes
@@ -14,29 +14,19 @@ workflow preprocess_genetic_data {
                 files: [files]
             }
             .set { bgen_files_ch }
-        
-        // Combine with BGEN files
-        chr_ch
-            .combine(bgen_files_ch.prefix)
-            .combine(bgen_files_ch.files)
-            .set { chr_bgen_ch }
-            
-        generate_info_score(chr_bgen_ch)
 
-        // Create new channel which creates tuple with CHR as first element 
-        generate_info_score.out.map { filepath ->
-            def filename = filepath.getName().toString()  // Extract the filename 
-            def (chromosome) = filename =~ /chr(\d+|X|Y)\.snpstats/ // Get the chromosome number 
-            return [chromosome[1], filepath] // return tuple
-        }
-        .combine(bgen_files_ch.prefix)
-        .combine(bgen_files_ch.files)
-        .set { chr_snpstats_bgen_ch }
+        // Generate info score for SNPs-of-interest
+        generate_info_score(snps_by_chr_ch.combine(bgen_files_ch.prefix).combine(bgen_files_ch.files))
 
-        find_exclusion_snps(chr_snpstats_bgen_ch)
+        // Find any SNPs below INFO score threshold 
+        find_inclusion_snps(generate_info_score.out.combine(bgen_files_ch.prefix).combine(bgen_files_ch.files))
 
-        bgen_to_bed(find_exclusion_snps.out)
+        // Convert to BED file for LD clumping
+        bgen_to_bed(find_inclusion_snps.out)
+
+        // Merge BED files
+        merge_beds(bgen_to_bed.out.collect())
 
     emit:
-        bgen_to_bed.out
+        bed_ch = merge_beds.out
 }
