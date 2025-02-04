@@ -6,11 +6,11 @@ params.INFO_THRESHOLD = 0.9
 params.MAF_THRESHOLD = 0.01
 params.ASSEMBLY = "hg19"
 params.eQTLGEN_DATA = ""
-params.Concordant = "True"
+params.ADDITIONAL_TRANSACTORS = ""
+params.ASB_quality = "High"
 params.OUTDIR = "${launchDir}/output"
 params.SNPSTATS_CACHE = "$params.OUTDIR/info_scores"
 
-include { create_tf_bed_channel } from './subworkflows/channels.nf' 
 include { preprocess_qtl_data } from './subworkflows/qtls.nf'
 include { preprocess_genetic_data } from './subworkflows/bgen.nf'
 include { generate_independent_snps } from './subworkflows/clump.nf'
@@ -19,11 +19,9 @@ include { check_interactions } from './subworkflows/interactions.nf'
 workflow {
     preprocess_qtl_data()
 
-    preprocess_genetic_data(preprocess_qtl_data.out.chrs)
+    preprocess_genetic_data(preprocess_qtl_data.out.snps_by_chr)
 
-    create_tf_bed_channel(preprocess_genetic_data.out,  preprocess_qtl_data.out.tf_chr_eqtls)
+    generate_independent_snps(preprocess_qtl_data.out.transactors_by_tf, preprocess_genetic_data.out.bed_ch)
 
-    generate_independent_snps(create_tf_bed_channel.out.tf_bed)
-
-    check_interactions(preprocess_qtl_data.out.tf_chr_bqtls, create_tf_bed_channel.out.bed_files, generate_independent_snps.out)
+    check_interactions(preprocess_qtl_data.out.bqtls_by_tf,  generate_independent_snps.out, preprocess_genetic_data.out.bed_ch)
 }
