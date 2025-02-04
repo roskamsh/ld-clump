@@ -1,9 +1,6 @@
 process pull_eQTLs {
     label 'command_line_image'
-
-    when:
-    params.eQTLGEN_DATA == ""
-
+    
     output:
     path "*txt"
 
@@ -67,28 +64,6 @@ process read_and_filter_bQTLs {
     tfs.to_csv("TF_list.csv", index = False, header=False)
     filt.to_csv("TF_CHR_bQTL_list.csv", index = False)
     """
-}
-
-process identify_eqtl_chrs {
-    label 'bgen_python_image'
-
-    input:
-    tuple val(tf), path(eqtlgen_data)
-    path script
-
-    output:
-    tuple val(tf), env(chr), path(eqtlgen_data)
-
-    script:
-    """
-    python ${script} --data ${eqtlgen_data} --tf ${tf} --qtltype eQTL > chr.txt
-    if grep -q "Not found in eQTLGen" "chr.txt"; then
-        echo "The TF, ${tf}, is not found in eQTLGen"
-    else
-        chr=\$(cat chr.txt)
-    fi
-    """ 
-
 }
 
 process identify_transactors {
