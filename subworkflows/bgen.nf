@@ -28,5 +28,5 @@ workflow preprocess_genetic_data {
         merge_beds(bgen_to_bed.out.collect())
 
     emit:
-        merge_beds.out
+        bed_ch = merge_beds.out
 }
