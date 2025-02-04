@@ -45,27 +45,6 @@ workflow preprocess_qtl_data {
             .groupTuple()
             .set { bqtls_by_tf }
         
-        /* 
-        // Identify CHRs either eQTLs or bQTLs belong to
-        read_and_filter_bQTLs.out.tf_chr_bqtls
-            .splitCsv(header: true)
-            .multiMap { 
-                row -> 
-                tf_chr_bqtl: [row.tf, row.CHROM, row.ID]
-                chr: [row.CHROM]
-            }
-            .set { bqtls_ch }
-
-        tf_chr_eqtls_ch
-            .map { tf, chr, data -> chr }
-            .mix(bqtls_ch.chr.flatten())
-            .unique()
-            .set { chr_ch }
-
-        bqtls_ch.tf_chr_bqtl
-            .groupTuple(by: [0,1])
-            .set { tf_chr_bqtls_ch }
-*/
     emit:
     transactors_by_tf = identify_transactors.out
     bqtls_by_tf = bqtls_by_tf
