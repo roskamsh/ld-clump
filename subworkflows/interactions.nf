@@ -7,6 +7,7 @@ workflow check_interactions {
         bed_files
 
     main:
+        // Check whether bQTLs are in LD & save this information
         check_ld(bqtls_by_tf.join(transactors_by_tf).combine(bed_files))
 
         compile_ld_results(check_ld.out.collect())
