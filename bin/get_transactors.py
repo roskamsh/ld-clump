@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
     transactors = pd.read_csv(transactors, delimiter="\t")
     transactors = transactors[transactors.GeneSymbol == tf]
+    transactors = transactors[["SNP","SNPChr","SNPPos","AssessedAllele","OtherAllele","GeneSymbol","Pvalue"]]
 
     data = pd.concat([eqtls,transactors], ignore_index=True)
 
