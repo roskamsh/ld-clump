@@ -81,4 +81,4 @@ if __name__ == '__main__':
         print("cis-eQTLs lie within exclusion regions, no SNPs found in processed .bim file. Exiting...")
         exit(0)
     else:
-        transactors.to_csv(f"{tf}_ciseQTLs_hg38.assoc", index = False, sep = "\t")
+        transactors.to_csv(f"{tf}_transactors_hg38.assoc", index = False, sep = "\t")
