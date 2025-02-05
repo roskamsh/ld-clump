@@ -33,6 +33,11 @@ The configuration for a given run is specified in a run-specific config file, wh
 * `MAF_THRESHOLD` [ optional, default: 0.01 ] : Minor allele frequency below which SNPs will be filtered out from your final estimands file. 
 * `OUTDIR` [ optional, default: output ] : Output directory for results.
 * `SNPSTATS_CACHE` [ optional, default: `OUTDIR`/info_scores ] : Cache for saving snp stats output from QCtoolv2. This contains the output from the process bgen::generate_info_score(), and includes the following crucial information for every SNP in your `BGEN_FILES`: rsid, info, minor_allele_frequency.
+* `OUTCOME_EXTRA_COVARIATES` [ optional, default: ["Age-Assessment","Genetic-Sex"] ] : Extra covariates to add into estimands file used in TarGene. Current defaults are Age and Sex based on the labels used in the UK BioBank. These should be contained in a list and should also be formatted as Strings. 
+* `ESTIMANDS_ORDERS` [ optional, default: [2] ] : Order of interactions to compute in downstream TarGene run.
+* `ESTIMANDS_TYPE` [ optional, default: ["AIE] ] : Type of estimand for TarGene run. As this pipeline is specifically aimed at looking at interactions between variants, the default is AIE - Average Interaction Effect. These should be contained in a list and should also be formatted as Strings. 
+* `EXTRA_TREATMENTS` [ optional, default: [] ] : If there are additional confounder to include in your downstream run, specify them here. These should be contained in a list and should also be formatted as Strings. 
+* `ESTIMANDS_CONFIGURATION_TYPE` [ optional, default: "groups" ] : Type of configuration run for TarGene. See https://targene.github.io/targene-pipeline/stable/examples/interactions/ for more information.
 
 ## Run
 

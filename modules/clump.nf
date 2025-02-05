@@ -7,7 +7,7 @@ process create_assoc_file {
         path script
 
     output:
-        tuple val(tf), path(bed), path(bim), path(fam), path("${tf}_ciseQTLs_hg38.assoc"), optional: true
+        tuple val(tf), path(bed), path(bim), path(fam), path("${tf}_transactors_hg38.assoc"), optional: true
 
     script:
         """

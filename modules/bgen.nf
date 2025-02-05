@@ -2,7 +2,7 @@ process generate_info_score {
     label 'moremem'
     label 'moretime'
     label 'qctool_image'
-    storeDir("$params.SNPSTATS_CACHE")
+    publishDir("$params.OUTDIR/info_scores")
 
     input:
         tuple val(chr), val(snps), val(prefix), path(files)
