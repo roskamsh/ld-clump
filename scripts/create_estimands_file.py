@@ -2,6 +2,25 @@ import yaml
 import pandas as pd
 import numpy as np
 
+# Custom Dumper class to enforce double quotes on strings in output YAML
+class QuotedString(str):
+    pass
+
+def quoted_presenter(dumper, data):
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data, style='"')
+
+yaml.add_representer(QuotedString, quoted_presenter)
+
+# Function to convert all strings in a dictionary to a QuotedString
+def quote_strings(obj):
+    if isinstance(obj, str):
+        return QuotedString(obj)
+    elif isinstance(obj, list):
+        return [quote_strings(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: quote_strings(value) for key, value in obj.items()}
+    return obj
+
 # TARGENE specifications
 outcome_extra_covariates = ["Age-Assessment","Genetic-Sex"]
 extra_treatments = []
@@ -45,6 +64,9 @@ else:
         'variants': joined
     } 
 
+# Ensure quoted strings
+quoted_data = quote_strings(data)
+
 # Write to YAML
 with open('estimands.yaml', 'w') as file:
-    yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+    yaml.dump(quoted_data, file, default_flow_style=False, sort_keys=False)
