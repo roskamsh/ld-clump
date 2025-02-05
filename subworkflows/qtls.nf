@@ -46,8 +46,9 @@ workflow preprocess_qtl_data {
             .set { bqtls_by_tf }
         
     emit:
-    transactors_by_tf = identify_transactors.out
+    bqtls_csv_file = read_and_filter_bQTLs.out.bqtls
     bqtls_by_tf = bqtls_by_tf
+    transactors_csv_by_tf = identify_transactors.out
     snps_by_chr = snps_by_chr
     
 }
