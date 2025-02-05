@@ -23,14 +23,13 @@ process create_bqtl_lists {
 
 process merge_QTLs {
     label 'bgen_python_image'
-    publishDir "$params.OUTDIR/snps", mode: 'copy'
 
     input:
         tuple val(group), val(tfs), path(transactors), path(bqtls)
 
     output:
-        path "final_transactors.csv", emit: transactors
-        path "final_bQTLs.csv", emit: bQTLs
+        path "transactors.csv", emit: transactors
+        path "bQTLs.csv", emit: bQTLs
 
     script:
         """
@@ -57,8 +56,8 @@ process merge_QTLs {
         bqtl_df = pd.concat(bqtl_list, ignore_index=True)
 
         # Save the combined DataFrame to a CSV file (optional)
-        transactor_df.to_csv('final_transactors.csv', index=False)
-        bqtl_df.to_csv('final_bQTLs.csv', index=False) 
+        transactor_df.to_csv('transactors.csv', index=False)
+        bqtl_df.to_csv('bQTLs.csv', index=False) 
         """
 }
 
@@ -166,6 +165,8 @@ process create_ld_block_input_file {
 
     output:
         path "ld-block-removal-input.csv"
+        path "final_bQTLs.csv"
+        path "final_transactors.csv"
 
     script:
         """
@@ -190,6 +191,11 @@ process create_ld_block_input_file {
                                         left_on = ['SNP','TF'], 
                                         right_on = ['ID','tf'], 
                                         how = 'inner')
+        
+        # Write annotated final bQTLs to a file
+        annot_bqtls.drop(columns=["ID","tf"])
+        annot_bqtls.to_csv("final_bQTLs.csv", index = False)
+
         # Remove chr prefix from chromosome column
         annot_bqtls["CHR_num"] = annot_bqtls['CHROM'].str.replace(r'^CHR', '', case=False, regex=True)
         annot_bqtls = annot_bqtls[["SNP","CHR_num","POS"]]
@@ -199,6 +205,11 @@ process create_ld_block_input_file {
                                                     left_on = ['SNP','TF'],
                                                     right_on = ['SNP','GeneSymbol'],
                                                     how = 'inner')
+
+        ## Write annotated final transactors to a file
+        annot_transactors.drop(columns=["TF"])
+        annot_transactors.to_csv("final_transactors.csv", index = False)
+
         annot_transactors = annot_transactors[["SNP","SNPChr","SNPPos"]]
         annot_transactors.columns = ["RSID","CHR","POS"] 
 
