@@ -111,7 +111,7 @@ process generate_estimands {
         outcome_extra_covariates = ${params.OUTCOME_EXTRA_COVARIATES.collect{"'$it'"}}
         extra_treatments = ${params.EXTRA_TREATMENTS.collect{"'$it'"}}
         estimands_orders = ${params.ESTIMANDS_ORDERS}
-        estimands_type = ${params.ESTIMANDS_TYPE.collect{"'$it'"}}
+        estimands_type = "${params.ESTIMANDS_TYPE}"
         estimands_configuration_type = "${params.ESTIMANDS_CONFIGURATION_TYPE}"
 
         # Final SNPs
