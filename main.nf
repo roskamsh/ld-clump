@@ -15,7 +15,7 @@ params.ASB_quality = "High"
 // TARGENE specifications
 params.OUTCOME_EXTRA_COVARIATES = ["Age-Assessment","Genetic-Sex"]
 params.ESTIMANDS_ORDERS = [2]
-params.ESTIMANDS_TYPE = ["AIE"]
+params.ESTIMANDS_TYPE = "AIE"
 params.EXTRA_TREATMENTS = []
 params.ESTIMANDS_CONFIGURATION_TYPE = "groups"
 
