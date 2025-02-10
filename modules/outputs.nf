@@ -102,6 +102,11 @@ process generate_estimands {
                 return {key: quote_strings(value) for key, value in obj.items()}
             return obj
 
+        # Custom Dumper to ensure correct indentation
+        class IndentedDumper(yaml.Dumper):
+            def increase_indent(self, flow=False, indentless=False):
+                return super(IndentedDumper, self).increase_indent(flow, False)
+
         # TARGENE specifications
         outcome_extra_covariates = ${params.OUTCOME_EXTRA_COVARIATES.collect{"'$it'"}}
         extra_treatments = ${params.EXTRA_TREATMENTS.collect{"'$it'"}}
@@ -116,40 +121,30 @@ process generate_estimands {
         ## Remove TFs in bqtls that are not contained in transactors
         bqtls = bqtls[bqtls['TF'].isin(transactors.TF.unique())]
 
+        ## Create dictionaries for bQTLs/transActors
         bqtl_dictionary = {key: bqtls.loc[bqtls['TF'] == key, 'SNP'].tolist() for key in bqtls['TF']}
         transactors_dictionary = {key: transactors.loc[transactors['TF'] == key, 'SNP'].tolist() for key in transactors['TF']}
 
-        joined = {}
-        for key in bqtl_dictionary:
-            joined[key] = {'bQTLs': bqtl_dictionary[key], 'transActors': transactors_dictionary[key]}
+        joined = {key: {'bQTLs': bqtl_dictionary.get(key, []), 'transActors': transactors_dictionary.get(key, [])} for key in bqtl_dictionary}
 
-        # Generate complete dictionary
-        if len(extra_treatments) == 0:
-            data = {
-                'type': estimands_configuration_type,
-                'estimands': [
-                    {'type': estimands_type, 'orders': estimands_orders}
-                ],
-                'outcome_extra_covariates': outcome_extra_covariates,
-                'variants': joined
-            }
-        else:
-            data = {
-                'type': estimands_configuration_type,
-                'estimands': [
-                    {'type': estimands_type, 'orders': estimands_orders}
-                ],
-                'outcome_extra_covariates': outcome_extra_covariates,
-                'extra_treatments' : extra_treatments,
-                'variants': joined
-            } 
+        # Construct the YAML data
+        estimands_entry = {'orders': estimands_orders, 'type': estimands_type}
+        data = {
+            'type': estimands_configuration_type,
+            'estimands': [estimands_entry],
+            'outcome_extra_covariates': outcome_extra_covariates,
+            'variants': joined
+        }
+
+        if len(extra_treatments) > 0:
+            data['extra_treatments'] = extra_treatments
 
         # Ensure quoted strings
         quoted_data = quote_strings(data)
 
-        # Write to YAML
+        # Write to YAML with correct indentation
         with open('estimands.yaml', 'w') as file:
-            yaml.dump(quoted_data, file, default_flow_style=False, sort_keys=False)
+            yaml.dump(quoted_data, file, default_flow_style=False, sort_keys=False, width=100, indent=2, Dumper=IndentedDumper)
         """
 }
 
