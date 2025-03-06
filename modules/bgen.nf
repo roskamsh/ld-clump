@@ -127,7 +127,7 @@ process merge_beds {
             exit 1
         fi
 
-        Create a merge list file, excluding the first prefix
+        # Create a merge list file, excluding the first prefix
         merge_list="mergelist.txt"
         > \$merge_list
 
