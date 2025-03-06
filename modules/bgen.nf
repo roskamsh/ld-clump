@@ -110,22 +110,24 @@ process merge_beds {
 
     script:
         """
-        # Step 1: Identify all BED files and extract their prefixes
-        bed_files=(\$(ls *.bed))
+        # Identify prefixes for BED files with non-zero SNP counts
+        bed_files=()
         prefixes=()
-
-        for bed_file in "\${bed_files[@]}"; do
-            prefix="\${bed_file%.bed}"
-            prefixes+=("\$prefix")
+        for bed_file in *.bed; do
+            bim="\${bed_file%.bed}.bim"
+            if [[ -s "\$bim" && \$(wc -l < "\$bim") -gt 0 ]]; then
+                bed_files+=("\$bed_file")
+                prefix="\${bed_file%.bed}"
+                prefixes+=("\$prefix")
+            fi
         done
 
-        # Check if there are enough files to merge
         if [ \${#prefixes[@]} -lt 2 ]; then
             echo "Not enough BED files to merge. At least two BED files are required."
             exit 1
         fi
 
-        # Step 2: Create a merge list file (excluding the first prefix)
+        Create a merge list file, excluding the first prefix
         merge_list="mergelist.txt"
         > \$merge_list
 
@@ -133,7 +135,6 @@ process merge_beds {
             echo "\$prefix" >> \$merge_list
         done
 
-        # Step 3: Run PLINK to merge the datasets
         first_prefix=\${prefixes[0]}
         output_prefix="merged_dataset"
 
