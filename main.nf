@@ -9,7 +9,7 @@ params.ASSEMBLY = "hg19"
 
 // QTL input data and thresholds
 params.eQTLGEN_DATA = ""
-params.ADDITIONAL_TRANSACTORS = ""
+params.ADDITIONAL_TRANSACTORS = "${projectDir}/assets/NO_ADDITIONAL_TRANSACTORS"
 params.ASB_quality = "High"
 
 // TARGENE specifications
