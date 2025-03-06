@@ -24,11 +24,13 @@ if __name__ == '__main__':
     eqtls = eqtls[eqtls.GeneSymbol == tf]
     eqtls = eqtls[["SNP","SNPChr","SNPPos","AssessedAllele","OtherAllele","GeneSymbol","Pvalue"]]
 
-    transactors = pd.read_csv(transactors, delimiter="\t")
-    transactors = transactors[transactors.GeneSymbol == tf]
-    transactors = transactors[["SNP","SNPChr","SNPPos","AssessedAllele","OtherAllele","GeneSymbol","Pvalue"]]
-
-    data = pd.concat([eqtls,transactors], ignore_index=True)
+    if transactors == "NO_ADDITIONAL_TRANSACTORS":
+        data = eqtls
+    else:
+        transactors = pd.read_csv(transactors, delimiter="\t")
+        transactors = transactors[transactors.GeneSymbol == tf]
+        transactors = transactors[["SNP","SNPChr","SNPPos","AssessedAllele","OtherAllele","GeneSymbol","Pvalue"]]
+        data = pd.concat([eqtls,transactors], ignore_index=True)
 
     # Check if TF is present in eQTLGen database
     if data.shape[0] == 0:
