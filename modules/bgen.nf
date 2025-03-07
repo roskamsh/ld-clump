@@ -106,7 +106,7 @@ process merge_beds {
         path files
     
     output:
-        tuple path("merged.bed"), path ("merged.bim"), path("merged.fam")
+        tuple path("merged.bed"), path ("merged.bim"), path("merged.fam"), optional: true
 
     script:
         """
@@ -122,23 +122,30 @@ process merge_beds {
             fi
         done
 
-        if [ \${#prefixes[@]} -lt 2 ]; then
-            echo "Not enough BED files to merge. At least two BED files are required."
-            exit 1
+        # Compute number of prefixes
+        n_prefixes=\${#prefixes[@]}
+        # If only one file, return this as the merged file
+        if [[ \$n_prefixes -eq 1 ]]; then
+            echo "Only 1 BED file containing SNPs-of-interest, skipping merge."
+            cp "\${prefixes[0]}.bed" merged.bed
+            cp "\${prefixes[0]}.bim" merged.bim 
+            cp "\${prefixes[0]}.fam" merged.fam
+        elif [[ \$n_prefixes -gt 1 ]]; then
+            echo "More than 1 BED file containing SNPs-of-interest, merging BED files using PLINK."
+            merge_list="mergelist.txt"
+            > \$merge_list
+
+            for prefix in "\${prefixes[@]:1}"; do
+                echo "\$prefix" >> \$merge_list
+            done
+
+            first_prefix=\${prefixes[0]}
+            output_prefix="merged_dataset"
+
+            # Merge all BED files using plink
+            plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged  
+        else
+            echo "No BED files remaining to merge, exiting."
         fi
-
-        # Create a merge list file, excluding the first prefix
-        merge_list="mergelist.txt"
-        > \$merge_list
-
-        for prefix in "\${prefixes[@]:1}"; do
-            echo "\$prefix" >> \$merge_list
-        done
-
-        first_prefix=\${prefixes[0]}
-        output_prefix="merged_dataset"
-
-        # Merge all BED files using plink
-        plink --bfile "\$first_prefix" --merge-list "\$merge_list" --make-bed --out merged 
         """
 }
