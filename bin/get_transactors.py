@@ -24,6 +24,10 @@ if __name__ == '__main__':
     eqtls = eqtls[eqtls.GeneSymbol == tf]
     eqtls = eqtls[["SNP","SNPChr","SNPPos","AssessedAllele","OtherAllele","GeneSymbol","Pvalue"]]
 
+    # If duplicate SNPs (GTEx), keep only 1, prioritizing lower p-value
+    eqtls = eqtls.sort_values(by="Pvalue", ascending=True).drop_duplicates(subset="SNP", keep="first")
+    eqtls = eqtls.reset_index(drop=True)
+
     if transactors == "NO_ADDITIONAL_TRANSACTORS":
         data = eqtls
     else:
