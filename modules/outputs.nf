@@ -159,7 +159,7 @@ process create_ld_block_input_file {
         path input_bqtls
 
     output:
-        path "ld-block-removal-input.csv"
+        path "snps.csv"
         path "final_bQTLs.csv"
         path "final_transactors.csv"
 
@@ -210,6 +210,6 @@ process create_ld_block_input_file {
 
         final = pd.concat([annot_bqtls, annot_transactors], ignore_index=True)
 	final = final.drop_duplicates(subset = ["RSID"])
-        final.to_csv("ld-block-removal-input.csv", index = False)
+        final.to_csv("snps.csv", index = False)
         """
 }
