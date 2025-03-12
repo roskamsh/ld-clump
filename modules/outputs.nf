@@ -209,6 +209,7 @@ process create_ld_block_input_file {
         annot_transactors.columns = ["RSID","CHR","POS"] 
 
         final = pd.concat([annot_bqtls, annot_transactors], ignore_index=True)
+	final = final.drop_duplicates(subset = ["RSID"])
         final.to_csv("ld-block-removal-input.csv", index = False)
         """
 }
