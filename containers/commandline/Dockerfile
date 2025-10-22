@@ -5,4 +5,4 @@ FROM ubuntu:latest
 RUN apt-get update && apt-get install -y wget gzip && apt-get clean
 
 # Set the entrypoint to an interactive shell
-ENTRYPOINT ["/bin/bash"]
+CMD ["/bin/bash"]
